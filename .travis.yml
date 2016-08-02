@@ -1,0 +1,19 @@
+sudo: false
+language: ruby
+script:
+  - str="$(rvm current)"
+  - if [[ $str = jruby-* ]]; then bundle exec rake spec; bundle exec jruby spec/rtype_spec.rb; else bundle exec rake spec; fi
+
+cache:
+- bundler
+
+rvm:
+- 2.2
+- 2.1
+- rbx-2
+- jruby-9.0.5.0
+
+gemfile:
+- Gemfile
+- Gemfile-native
+- Gemfile-java

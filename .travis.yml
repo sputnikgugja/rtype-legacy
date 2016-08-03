@@ -2,7 +2,7 @@ sudo: false
 language: ruby
 script:
   - str="$(rvm current)"
-  - if [[ $str = jruby-* ]]; then bundle exec rake spec; bundle exec jruby spec/rtype_spec.rb; else bundle exec rake spec; fi
+  - if [[ $str = jruby-* ]]; then bundle exec rake spec; bundle exec jruby spec/rtype_legacy_spec.rb; else bundle exec rake spec; fi
 
 cache:
 - bundler
@@ -10,8 +10,10 @@ cache:
 rvm:
 - 2.2
 - 2.1
+- 1.9
 - rbx-2
 - jruby-9.0.5.0
+- jruby-1.7
 
 gemfile:
 - Gemfile

@@ -1,10 +1,10 @@
-# Rtype: ruby with type
-[![Gem Version](https://badge.fury.io/rb/rtype.svg)](https://badge.fury.io/rb/rtype)
-[![Build Status](https://travis-ci.org/sputnikgugja/rtype.svg?branch=master)](https://travis-ci.org/sputnikgugja/rtype)
-[![Coverage Status](https://coveralls.io/repos/github/sputnikgugja/rtype/badge.svg?branch=master)](https://coveralls.io/github/sputnikgugja/rtype?branch=master)
+# Rtype Legacy: rtype for ruby 1.9+
+[![Gem Version](https://badge.fury.io/rb/rtype-legacy.svg)](https://badge.fury.io/rb/rtype-legacy)
+[![Build Status](https://travis-ci.org/sputnikgugja/rtype-legacy.svg?branch=master)](https://travis-ci.org/sputnikgugja/rtype-legacy)
+[![Coverage Status](https://coveralls.io/repos/github/sputnikgugja/rtype-legacy/badge.svg?branch=master)](https://coveralls.io/github/sputnikgugja/rtype-legacy?branch=master)
 
 ```ruby
-require 'rtype'
+require 'rtype/legacy'
 
 class Test
   rtype [:to_i, Numeric] => Numeric
@@ -12,9 +12,9 @@ class Test
     a.to_i + b
   end
 
-  rtype {state: Boolean} => Boolean
-  def self.invert(state:)
-    !state
+  rtype [{state: Boolean}. {}] => Boolean
+  def self.invert(opts)
+    !opts[:state]
   end
 end
 
@@ -23,32 +23,41 @@ Test.new.sum(123, "asd")
 # Expected "asd" to be a Numeric
 
 Test::invert(state: 0)
-# (Rtype::ArgumentTypeError) for 'state' argument:
-# Expected 0 to be a Boolean
+# (Rtype::ArgumentTypeError) for 1st argument:
+# Expected {:state=>0} to be a hash with 1 elements:
+# - state : Expected 0 to be a Boolean
 ```
 
 ## Requirements
-- Ruby >= 2.1
+- Ruby >= 1.9
+  - If you are using ruby 2.1+, see [rtype](https://github.com/sputnikgugja/rtype)
 - MRI
   - If C native extension is used. otherwise it is not required
-- JRuby (JRuby 9000+)
+- JRuby (JRuby 1.7+)
   - If Java extension is used. otherwise it is not required
+
+## Difference between rtype and rtype-legacy
+- The two are separate gem
+- Rtype requires ruby 2.1+. Rtype Legacy requires ruby 1.9+
+- Rtype supports 'type checking for keyword argument'. Rtype Legacy doesn't
+- Rtype uses `Module#prepend`. Rtype Legacy redefines method
+- Rtype can be used outside of module (with specifying method name). Rtype Legacy can't be used outside of module
 
 ## Features
 - Provides type checking for arguments and return
-- Provides type checking for [Keyword Argument](#keyword-argument)
 - [Type checking for hash elements](#hash)
 - [Duck Typing](#duck-typing)
 - [Typed Array](#typed-array)
+- [Numeric check](#special-behaviors). e.g. `Int >= 0`
 - Custom type behavior
 - ...
 
 ## Installation
-Run `gem install rtype` or add `gem 'rtype'` to your `Gemfile`
+Run `gem install rtype-legacy` or add `gem 'rtype-legacy'` to your `Gemfile`
 
 And add to your `.rb` source file:
 ```ruby
-require 'rtype'
+require 'rtype/legacy'
 ```
 
 ### Native extension
@@ -57,44 +66,43 @@ Rtype itself is pure-ruby gem. but you can make it more faster by using native e
 #### Native extension for MRI
 Run
 ```ruby
-gem install rtype-native
+gem install rtype-legacy-native
 ```
 or add to your `Gemfile`:
 ```ruby
-gem 'rtype-native'
+gem 'rtype-legacy-native'
 ```
-then, Rtype uses it. (**Do not** `require 'rtype-native'`)
+then, Rtype Legacy uses it. (**Do not** `require 'rtype-legacy-native'`)
 
 #### Java extension for JRuby
 Run
 ```ruby
-gem install rtype-java
+gem install rtype-legacy-java
 ```
 or add to your `Gemfile`:
 ```ruby
-gem 'rtype-java'
+gem 'rtype-legacy-java'
 ```
-then, Rtype uses it. (**Do not** `require 'rtype-java'`)
+then, Rtype Legacy uses it. (**Do not** `require 'rtype-legacy-java'`)
 
 ## Usage
 
 ### Supported Type Behaviors
-- `Module`
-  - Value must be of this module (`is_a?`)
+- `Module` : Value must be of this module (`is_a?`)
   - `Any` : Alias for `BasicObject` (means Any Object)
   - `Boolean` : `true` or `false`
-- `Symbol`
-  - Value must respond to a method with this name
-- `Regexp`
-  - Value must match this regexp pattern
-- `Range`
-  - Value must be included in this range
-- `Array`
-  - Value can be any type in this array
+- `Symbol` : Value must respond to a method with this name
+- `Regexp` : Value must match this regexp pattern
+- `Range` : Value must be included in this range
+- `Array` : Value can be any type in this array
+- `Proc` : Value must return a truthy value for this proc
+- `true` : Value must be truthy
+- `false` : Value must be falsy
+- `nil` : Value must be nil
 - `Hash`
   - Value must be a hash
   - Each of elements must be valid
-  - Value's keys must be equal to this hash's keys
+  - Keys of the value must be equal to keys of this hash
   - **String** key is **different** from **symbol** key
   - vs. Keyword arguments (e.g.)
     - `[{}]` is **not** hash argument. it is keyword argument, because its position is last
@@ -103,44 +111,9 @@ then, Rtype uses it. (**Do not** `require 'rtype-java'`)
     - `{}` is keyword argument. non-keyword arguments must be in array.
   - Of course, nested hash works
   - Example: [Hash](#hash)
-- `Proc`
-  - Value must return a truthy value for this proc
-- `true`
-  - Value must be truthy
-- `false`
-  - Value must be falsy
-- `nil`
-  - Value must be nil
   
-- Special Behaviors
-  - `TypedArray` : Ensures value is an array with the type (type signature)
-    - `Array::of(type)` (recommended)
-    - or `Rtype::Behavior::TypedArray[type]`
-    - Example: [TypedArray](#typed-array)
-  
-  - `Num, Int, Flo` : Numeric check
-    - `Num/Int/Flo >/>=/</<=/== x`
-    - e.g. `Num >= 2` means value must be a `Numeric` and >= 2
-    - e.g. `Int >= 2` means value must be a `Integer` and >= 2
-    - e.g. `Flo >= 2` means value must be a `Float` and >= 2
-  
-  - `And` : Ensures value is valid for all given types
-    - `Rtype::and(*types)`, `Rtype::Behavior::And[*types]`
-    - or `Array#comb`, `Object#and(*others)`
-    
-  - `Xor` : Ensures value is valid for only one of given types
-    - `Rtype::xor(*types)`, `Rtype::Behavior::Xor[*types]`
-    - or `Object#xor(*others)`
-
-  - `Not` : Ensures value is not valid for all given types
-    - `Rtype::not(*types)`, `Rtype::Behavior::Not[*types]`
-    - or `Object#not`
-
-  - `Nilable` : Value can be nil
-    - `Rtype::nilable(type)`, `Rtype::Behavior::Nilable[type]`
-    - or `Object#nilable`, `Object#or_nil`
-
-  - You can create custom behavior by extending `Rtype::Behavior::Base`
+- [Special Behaviors](#special-behaviors)
+  - `TypedArray`, `Num, Int, Flo`, `And`, `Xor`, `Not`, `Nilable`
 
 ### Examples
 
@@ -173,31 +146,6 @@ e.any_type_arg("Any argument!") # Works
 e.return_type_test
 # (Rtype::ReturnTypeError) for return:
 # Expected "not integer" to be a Integer
-```
-
-#### Keyword argument
-```ruby
-require 'rtype'
-
-class Example
-  rtype {name: String} => Any
-  def say_your_name(name:)
-    puts "My name is #{name}"
-  end
-  
-  # Mixing positional arguments and keyword arguments
-  rtype [String, {age: Integer}] => Any
-  def name_and_age(name, age:)
-    puts "Name: #{name}, Age: #{age}"
-  end
-end
-
-Example.new.say_your_name(name: "Babo") # My name is Babo
-Example.new.name_and_age("Bamboo", age: 100) # Name: Bamboo, Age: 100
-
-Example.new.say_your_name(name: 12345)
-# (Rtype::ArgumentTypeError) for 'name' argument:
-# Expected 12345 to be a String
 ```
 
 #### Duck typing
@@ -238,28 +186,27 @@ def func(hash)
   puts hash[:msg]
 end
 
-# last hash is not hash argument but keyword arguments
-func({}, {})
+func({})
 # (Rtype::ArgumentTypeError) for 1st argument:
 # Expected {} to be a hash with 1 elements:
 # - msg : Expected nil to be a String
 
-func({msg: 123}, {})
+func({msg: 123})
 # (Rtype::ArgumentTypeError) for 1st argument:
 # Expected {:msg=>123} to be a hash with 1 elements:
 # - msg : Expected 123 to be a String
 
-func({msg: "hello", key: 'value'}, {})
+func({msg: "hello", key: 'value'})
 # (Rtype::ArgumentTypeError) for 1st argument:
 # Expected {:msg=>"hello", :key=>"value"} to be a hash with 1 elements:
 # - msg : Expected "hello" to be a String
 
-func({"msg" => "hello hash"}, {})
+func({"msg" => "hello hash"})
 # (Rtype::ArgumentTypeError) for 1st argument:
 # Expected {"msg"=>"hello hash"} to be a hash with 1 elements:
 # - msg : Expected nil to be a String
 
-func({msg: "hello hash"}, {}) # hello hash
+func({msg: "hello hash"}) # hello hash
 ```
 
 #### rtype with attr_accessor
@@ -356,21 +303,6 @@ class Example
 end
 ```
 
-#### In the outside of module (root)
-In the outside of module, annotation mode doesn't work. You must specify method name.
-
-```ruby
-rtype :say, [String] => Any
-def say(message)
-  puts message
-end
-
-Test.new.say "Hello" # Hello
-
-rtype [String] => Any
-# (ArgumentError) Annotation mode not working in the outside of module
-```
-
 #### Class method
 Annotation mode works for both instance method and class method
 
@@ -424,84 +356,89 @@ Example.new.method(:test).return_type
 # => Any
 ```
 
+#### Special Behaviors
+  - `TypedArray` : Ensures value is an array with the type (type signature)
+    - `Array::of(type)` (recommended)
+    - or `Rtype::Behavior::TypedArray[type]`
+    - Example: [TypedArray](#typed-array)
+  
+  - `Num, Int, Flo` : Numeric check
+    - `Num/Int/Flo >/>=/</<=/== x`
+    - e.g. `Num >= 2` means value must be a `Numeric` and >= 2
+    - e.g. `Int >= 2` means value must be a `Integer` and >= 2
+    - e.g. `Flo >= 2` means value must be a `Float` and >= 2
+  
+  - `And` : Ensures value is valid for all given types
+    - `Rtype::and(*types)`, `Rtype::Behavior::And[*types]`
+    - or `Array#comb`, `Object#and(*others)`
+    
+  - `Xor` : Ensures value is valid for only one of given types
+    - `Rtype::xor(*types)`, `Rtype::Behavior::Xor[*types]`
+    - or `Object#xor(*others)`
+
+  - `Not` : Ensures value is not valid for all given types
+    - `Rtype::not(*types)`, `Rtype::Behavior::Not[*types]`
+    - or `Object#not`
+
+  - `Nilable` : Value can be nil
+    - `Rtype::nilable(type)`, `Rtype::Behavior::Nilable[type]`
+    - or `Object#nilable`, `Object#or_nil`
+
+  - You can create custom behaviors by extending `Rtype::Behavior::Base`
+
 ## Documentation
-[RubyDoc.info](http://www.rubydoc.info/gems/rtype)
+[RubyDoc.info](http://www.rubydoc.info/gems/rtype-legacy)
 
 ## Benchmarks
-Result of `rake benchmark` ([source](https://github.com/sputnikgugja/rtype/tree/master/benchmark/benchmark.rb))
+Result of `rake benchmark` ([source](https://github.com/sputnikgugja/rtype-legacy/tree/master/benchmark/benchmark.rb))
+
+Rubype and Sig don't support 1.9 ruby. Typecheck raise an error in my environment
 
 ### MRI
 ```
-Rtype with C native extension
-Ruby version: 2.1.7
+Ruby version: 1.9.3
 Ruby engine: ruby
-Ruby description: ruby 2.1.7p400 (2015-08-18 revision 51632) [x64-mingw32]
-Rtype version: 0.3.0
-Rubype version: 0.3.1
-Sig version: 1.0.1
-Contracts version: 0.13.0
-Typecheck version: 0.1.2
+Ruby description: ruby 1.9.3p551 (2014-11-13 revision 48407) [i686-linux]
+Rtype Legacy version: 0.0.1
+Contracts version: 0.14.0
+Rtype Legacy with native extension
 Warming up --------------------------------------
-                pure    85.328k i/100ms
-               rtype    25.665k i/100ms
-              rubype    21.414k i/100ms
-                 sig     8.921k i/100ms
-           contracts     4.638k i/100ms
-           typecheck     1.110k i/100ms
+                pure    49.620k i/100ms
+        rtype-legacy    13.038k i/100ms
+           contracts     2.765k i/100ms
 Calculating -------------------------------------
-                pure      3.282M (± 2.7%) i/s -     16.468M
-               rtype    339.065k (± 2.6%) i/s -      1.720M
-              rubype    266.893k (± 5.9%) i/s -      1.349M
-                 sig     99.952k (± 2.1%) i/s -    499.576k
-           contracts     49.693k (± 1.5%) i/s -    250.452k
-           typecheck     11.356k (± 1.6%) i/s -     57.720k
+                pure      2.037M (± 1.9%) i/s -     10.222M
+        rtype-legacy    179.155k (± 2.3%) i/s -    899.622k
+           contracts     30.576k (± 0.9%) i/s -    154.840k
 
 Comparison:
-                pure:  3282431.9 i/s
-               rtype:   339064.9 i/s - 9.68x slower
-              rubype:   266892.9 i/s - 12.30x slower
-                 sig:    99952.2 i/s - 32.84x slower
-           contracts:    49693.0 i/s - 66.05x slower
-           typecheck:    11355.9 i/s - 289.05x slower
+                pure:  2036909.8 i/s
+        rtype-legacy:   179155.3 i/s - 11.37x slower
+           contracts:    30575.8 i/s - 66.62x slower
 ```
 
 ### JRuby
-Without Rubype that doesn't support JRuby
-
 ```
-Rtype with Java extension
-Ruby version: 2.2.3
+Ruby version: 1.9.3
 Ruby engine: jruby
-Ruby description: jruby 9.0.5.0 (2.2.3) 2016-01-26 7bee00d Java HotSpot(TM) 64-Bit Server VM 25.60-b23 on 1.8.0_60-b27 +jit [Windows 10-amd64]
-Rtype version: 0.3.0
-Sig version: 1.0.1
-Contracts version: 0.13.0
-Typecheck version: 0.1.2
+Ruby description: jruby 1.7.23 (1.9.3p551) 2015-11-24 f496dd5 on Java HotSpot(TM) Server VM 1.8.0_91-b14 +jit [linux-i386]
+Rtype Legacy version: 0.0.1
+Contracts version: 0.14.0
+Rtype Legacy with java extension
 Warming up --------------------------------------
-                pure     9.994k i/100ms
-               rtype     6.181k i/100ms
-                 sig     4.041k i/100ms
-           contracts   951.000  i/100ms
-           typecheck   970.000  i/100ms
+                pure    76.140k i/100ms
+        rtype-legacy     5.123k i/100ms
+           contracts     1.422k i/100ms
 Calculating -------------------------------------
-                pure      7.128M (?±35.6%) i/s -     30.831M
-               rtype    121.556k (?± 6.2%) i/s -    605.738k
-                 sig     72.187k (?± 6.4%) i/s -    359.649k
-           contracts     24.984k (?± 3.9%) i/s -    125.532k
-           typecheck     12.041k (?± 9.5%) i/s -     60.140k
+                pure      6.330M (± 9.7%) i/s -     30.913M
+        rtype-legacy    293.793k (± 4.4%) i/s -      1.465M
+           contracts     33.924k (± 2.3%) i/s -    170.640k
 
 Comparison:
-                pure:  7128373.0 i/s
-               rtype:   121555.8 i/s - 58.64x slower
-                 sig:    72186.8 i/s - 98.75x slower
-           contracts:    24984.5 i/s - 285.31x slower
-           typecheck:    12041.0 i/s - 592.01x slower
+                pure:  6329735.2 i/s
+        rtype-legacy:   293793.2 i/s - 21.54x slower
+           contracts:    33924.0 i/s - 186.59x slower
 ```
-
-## Rubype, Sig
-Rtype is influenced by [Rubype](https://github.com/gogotanaka/Rubype) and [Sig](https://github.com/janlelis/sig).
-
-If you don't like Rtype, You can use other library such as Contracts, Rubype, Rtc, Typecheck, Sig.
 
 ## Author
 Sputnik Gugja (sputnikgugja@gmail.com)

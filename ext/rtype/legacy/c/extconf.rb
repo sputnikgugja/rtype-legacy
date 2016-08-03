@@ -1,3 +1,3 @@
 require 'mkmf'
 
-create_makefile("rtype_legacy/rtype_legacy_native")
+create_makefile("rtype/legacy/rtype_legacy_native")

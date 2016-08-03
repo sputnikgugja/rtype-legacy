@@ -12,7 +12,7 @@ class Test
     a.to_i + b
   end
 
-  rtype [{state: Boolean}. {}] => Boolean
+  rtype [{state: Boolean}, {}] => Boolean
   def self.invert(opts)
     !opts[:state]
   end

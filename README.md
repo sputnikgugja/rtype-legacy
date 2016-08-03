@@ -1,4 +1,4 @@
-# Rtype Legacy: rtype for ruby 1.9+
+# Rtype Legacy: ruby with type (rtype for ruby 1.9+)
 [![Gem Version](https://badge.fury.io/rb/rtype-legacy.svg)](https://badge.fury.io/rb/rtype-legacy)
 [![Build Status](https://travis-ci.org/sputnikgugja/rtype-legacy.svg?branch=master)](https://travis-ci.org/sputnikgugja/rtype-legacy)
 [![Coverage Status](https://coveralls.io/repos/github/sputnikgugja/rtype-legacy/badge.svg?branch=master)](https://coveralls.io/github/sputnikgugja/rtype-legacy?branch=master)

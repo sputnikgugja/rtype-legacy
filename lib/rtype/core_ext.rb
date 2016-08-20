@@ -231,7 +231,7 @@ private
 			define_method(:"#{name}?") do |val|
 				instance_variable_get(:"@#{name}")
 			end
-			::Rtype::define_typed_reader(self, name, Boolean)
+			::Rtype::define_typed_reader(self, :"#{name}?", Boolean)
 		end
 		nil
 	end

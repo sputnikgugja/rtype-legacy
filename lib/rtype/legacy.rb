@@ -102,7 +102,7 @@ module Rtype
 	def define_typed_reader(owner, name, type_behavior, singleton)
 		raise ArgumentError, "name is nil" if name.nil?
 		valid?(type_behavior, nil)
-		define_typed_method owner, name.to_sym, [] => type_behavior, singleton
+		define_typed_method owner, name.to_sym, {[] => type_behavior}, singleton
 	end
 	
 	# @param owner Owner of the setter
@@ -116,7 +116,7 @@ module Rtype
 	def define_typed_writer(owner, name, type_behavior, singleton)
 		raise ArgumentError, "name is nil" if name.nil?
 		valid?(type_behavior, nil)
-		define_typed_method owner, :"#{name.to_sym}=", [type_behavior] => Any, singleton
+		define_typed_method owner, :"#{name.to_sym}=", {[type_behavior] => Any}, singleton
 	end
 
 	# This is just 'information'

@@ -131,7 +131,7 @@ private
 			if !respond_to?(name)
 				singleton_class.send(:attr_reader, name)
 			end
-			::Rtype::define_typed_reader(singleton_class, name, type_behavior, true)
+			::Rtype::define_typed_reader(self, name, type_behavior, true)
 		end
 		nil
 	end
@@ -181,7 +181,7 @@ private
 			if !respond_to?(:"#{name}=")
 				singleton_class.send(:attr_writer, name)
 			end
-			::Rtype::define_typed_writer(singleton_class, name, type_behavior, true)
+			::Rtype::define_typed_writer(self, name, type_behavior, true)
 		end
 		nil
 	end

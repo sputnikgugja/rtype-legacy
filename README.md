@@ -418,7 +418,7 @@ Example.new.method(:test).return_type
 ## Benchmarks
 Result of `rake benchmark` ([source](https://github.com/sputnikgugja/rtype-legacy/tree/master/benchmark/benchmark.rb))
 
-Rubype and Sig don't support 1.9 ruby. Typecheck raise an error in my environment
+Rubype and Sig don't support 1.9 ruby. Typecheck raises an error in my environment
 
 ### MRI
 ```

@@ -208,7 +208,7 @@ private
 			define_method(:"#{name}=") do |val|
 				instance_variable_set(:"@#{name}", val.to_f)
 			end
-			::Rtype::define_typed_writer(self, name, Numeric)
+			::Rtype::define_typed_writer(self, name, Numeric, false)
 		end
 		nil
 	end
@@ -231,7 +231,7 @@ private
 			define_method(:"#{name}?") do |val|
 				instance_variable_get(:"@#{name}")
 			end
-			::Rtype::define_typed_reader(self, :"#{name}?", Boolean)
+			::Rtype::define_typed_reader(self, :"#{name}?", Boolean, false)
 		end
 		nil
 	end

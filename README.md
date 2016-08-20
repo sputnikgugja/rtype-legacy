@@ -12,6 +12,8 @@ class Test
     a.to_i + b
   end
 
+  # Second hash is keyword argument signature
+  # (syntax compatibility with 'rtype' gem)
   rtype [{state: Boolean}, {}] => Boolean
   def self.invert(opts)
     !opts[:state]

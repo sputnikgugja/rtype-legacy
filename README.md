@@ -24,7 +24,7 @@ Test.new.sum(123, "asd")
 # (Rtype::ArgumentTypeError) for 2nd argument:
 # Expected "asd" to be a Numeric
 
-Test::invert(state: 0)
+Test.invert(state: 0)
 # (Rtype::ArgumentTypeError) for 1st argument:
 # Expected {:state=>0} to be a hash with 1 elements:
 # - state : Expected 0 to be a Boolean

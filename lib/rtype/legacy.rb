@@ -81,39 +81,42 @@ module Rtype
 	# @param owner Owner of the accessor
 	# @param [#to_sym] name
 	# @param type_behavior A type behavior. e.g. Integer
+	# @param [Boolean] singleton Whether the method is singleton method
 	# @return [void]
 	# 
 	# @raise [ArgumentError] If name is nil
 	# @raise [TypeSignatureError]
-	def define_typed_accessor(owner, name, type_behavior)
-		define_typed_reader(owner, name, type_behavior)
-		define_typed_writer(owner, name, type_behavior)
+	def define_typed_accessor(owner, name, type_behavior, singleton)
+		define_typed_reader(owner, name, type_behavior, singleton)
+		define_typed_writer(owner, name, type_behavior, singleton)
 	end
 	
 	# @param owner Owner of the getter
 	# @param [#to_sym] name
 	# @param type_behavior A type behavior. e.g. Integer
+	# @param [Boolean] singleton Whether the method is singleton method
 	# @return [void]
 	# 
 	# @raise [ArgumentError] If name is nil
 	# @raise [TypeSignatureError]
-	def define_typed_reader(owner, name, type_behavior)
+	def define_typed_reader(owner, name, type_behavior, singleton)
 		raise ArgumentError, "name is nil" if name.nil?
 		valid?(type_behavior, nil)
-		define_typed_method owner, name.to_sym, [] => type_behavior
+		define_typed_method owner, name.to_sym, [] => type_behavior, singleton
 	end
 	
 	# @param owner Owner of the setter
 	# @param [#to_sym] name
 	# @param type_behavior A type behavior. e.g. Integer
+	# @param [Boolean] singleton Whether the method is singleton method
 	# @return [void]
 	# 
 	# @raise [ArgumentError] If name is nil
 	# @raise [TypeSignatureError]
-	def define_typed_writer(owner, name, type_behavior)
+	def define_typed_writer(owner, name, type_behavior, singleton)
 		raise ArgumentError, "name is nil" if name.nil?
 		valid?(type_behavior, nil)
-		define_typed_method owner, :"#{name.to_sym}=", [type_behavior] => Any
+		define_typed_method owner, :"#{name.to_sym}=", [type_behavior] => Any, singleton
 	end
 
 	# This is just 'information'

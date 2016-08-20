@@ -65,6 +65,7 @@ private
 	# 
 	# @raise [ArgumentError] If names contains nil
 	# @raise [TypeSignatureError] If type_behavior is invalid
+	# @raise [RuntimeError] If called outside of module
 	# @see #rtype
 	def rtype_accessor(*names, type_behavior)
 		rtype_reader(*names, type_behavior)
@@ -93,6 +94,7 @@ private
 	# 
 	# @raise [ArgumentError] If names contains nil
 	# @raise [TypeSignatureError] If type_behavior is invalid
+	# @raise [RuntimeError] If called outside of module
 	# @see #rtype
 	def rtype_reader(*names, type_behavior)
 		names.each do |name|
@@ -104,9 +106,9 @@ private
 			end
 
 			if is_a?(Module)
-				::Rtype::define_typed_reader(self, name, type_behavior)
+				::Rtype::define_typed_reader(self, name, type_behavior, false)
 			else
-				rtype_reader_self(name, type_behavior)
+				raise "rtype_reader doesn't work in the outside of module"
 			end
 		end
 		nil
@@ -129,7 +131,7 @@ private
 			if !respond_to?(name)
 				singleton_class.send(:attr_reader, name)
 			end
-			::Rtype::define_typed_reader(singleton_class, name, type_behavior)
+			::Rtype::define_typed_reader(singleton_class, name, type_behavior, true)
 		end
 		nil
 	end
@@ -142,6 +144,7 @@ private
 	# 
 	# @raise [ArgumentError] If names contains nil
 	# @raise [TypeSignatureError] If type_behavior is invalid
+	# @raise [RuntimeError] If called outside of module
 	# @see #rtype
 	def rtype_writer(*names, type_behavior)
 		names.each do |name|
@@ -153,9 +156,9 @@ private
 			end
 
 			if is_a?(Module)
-				::Rtype::define_typed_writer(self, name, type_behavior)
+				::Rtype::define_typed_writer(self, name, type_behavior, false)
 			else
-				rtype_reader_self(name, type_behavior)
+				raise "rtype_writer doesn't work in the outside of module"
 			end
 		end
 		nil
@@ -178,7 +181,7 @@ private
 			if !respond_to?(:"#{name}=")
 				singleton_class.send(:attr_writer, name)
 			end
-			::Rtype::define_typed_writer(singleton_class, name, type_behavior)
+			::Rtype::define_typed_writer(singleton_class, name, type_behavior, true)
 		end
 		nil
 	end

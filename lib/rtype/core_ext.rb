@@ -59,50 +59,126 @@ private
 	
 	# Makes the accessor methods (getter and setter) typed
 	# 
-	# @param [Array<#to_sym>] accessor_names
+	# @param [Array<#to_sym>] names
 	# @param type_behavior A type behavior
 	# @return [void]
 	# 
-	# @raise [ArgumentError] If accessor_names contains nil
+	# @raise [ArgumentError] If names contains nil
 	# @raise [TypeSignatureError] If type_behavior is invalid
-	# @raise [RuntimeError] If called outside of module
 	# @see #rtype
-	def rtype_accessor(*accessor_names, type_behavior)
-		accessor_names.each do |accessor_name|
-			raise ArgumentError, "accessor_names contains nil" if accessor_name.nil?
+	def rtype_accessor(*names, type_behavior)
+		rtype_reader(*names, type_behavior)
+		rtype_writer(*names, type_behavior)
+	end
+	
+	# Makes the accessor methods (getter and setter) typed
+	# 
+	# @param [Array<#to_sym>] names
+	# @param type_behavior A type behavior
+	# @return [void]
+	# 
+	# @raise [ArgumentError] If names contains nil
+	# @raise [TypeSignatureError] If type_behavior is invalid
+	# @see #rtype_self
+	def rtype_accessor_self(*names, type_behavior)
+		rtype_reader_self(*names, type_behavior)
+		rtype_writer_self(*names, type_behavior)
+	end
+	
+	# Makes the getter methods typed
+	# 
+	# @param [Array<#to_sym>] names
+	# @param type_behavior A type behavior
+	# @return [void]
+	# 
+	# @raise [ArgumentError] If names contains nil
+	# @raise [TypeSignatureError] If type_behavior is invalid
+	# @see #rtype
+	def rtype_reader(*names, type_behavior)
+		names.each do |name|
+			raise ArgumentError, "names contains nil" if name.nil?
 			
-			accessor_name = accessor_name.to_sym
-			if !respond_to?(accessor_name) || !respond_to?(:"#{accessor_name}=")
-				attr_accessor accessor_name
+			name = name.to_sym
+			if !respond_to?(name)
+				attr_reader name
 			end
 
 			if is_a?(Module)
-				::Rtype::define_typed_accessor(self, accessor_name, type_behavior, false)
+				::Rtype::define_typed_reader(self, name, type_behavior)
 			else
-				raise "rtype_accessor doesn't work in the outside of module"
+				rtype_reader_self(name, type_behavior)
 			end
 		end
 		nil
 	end
 	
-	# Makes the accessor methods (getter and setter) typed
+	# Makes the getter methods typed
 	# 
-	# @param [Array<#to_sym>] accessor_names
+	# @param [Array<#to_sym>] names
 	# @param type_behavior A type behavior
 	# @return [void]
 	# 
-	# @raise [ArgumentError] If accessor_names contains nil
+	# @raise [ArgumentError] If names contains nil
 	# @raise [TypeSignatureError] If type_behavior is invalid
 	# @see #rtype_self
-	def rtype_accessor_self(*accessor_names, type_behavior)
-		accessor_names.each do |accessor_name|
-			raise ArgumentError, "accessor_names contains nil" if accessor_name.nil?
+	def rtype_reader_self(*names, type_behavior)
+		names.each do |name|
+			raise ArgumentError, "names contains nil" if name.nil?
 			
-			accessor_name = accessor_name.to_sym
-			if !respond_to?(accessor_name) || !respond_to?(:"#{accessor_name}=")
-				singleton_class.send(:attr_accessor, accessor_name)
+			name = name.to_sym
+			if !respond_to?(name)
+				singleton_class.send(:attr_reader, name)
 			end
-			::Rtype::define_typed_accessor(self, accessor_name, type_behavior, true)
+			::Rtype::define_typed_reader(singleton_class, name, type_behavior)
+		end
+		nil
+	end
+	
+	# Makes the setter methods typed
+	# 
+	# @param [Array<#to_sym>] names
+	# @param type_behavior A type behavior
+	# @return [void]
+	# 
+	# @raise [ArgumentError] If names contains nil
+	# @raise [TypeSignatureError] If type_behavior is invalid
+	# @see #rtype
+	def rtype_writer(*names, type_behavior)
+		names.each do |name|
+			raise ArgumentError, "names contains nil" if name.nil?
+			
+			name = name.to_sym
+			if !respond_to?(:"#{name}=")
+				attr_writer name
+			end
+
+			if is_a?(Module)
+				::Rtype::define_typed_writer(self, name, type_behavior)
+			else
+				rtype_reader_self(name, type_behavior)
+			end
+		end
+		nil
+	end
+	
+	# Makes the setter methods typed
+	# 
+	# @param [Array<#to_sym>] names
+	# @param type_behavior A type behavior
+	# @return [void]
+	# 
+	# @raise [ArgumentError] If names contains nil
+	# @raise [TypeSignatureError] If type_behavior is invalid
+	# @see #rtype_self
+	def rtype_writer_self(*names, type_behavior)
+		names.each do |name|
+			raise ArgumentError, "names contains nil" if name.nil?
+			
+			name = name.to_sym
+			if !respond_to?(:"#{name}=")
+				singleton_class.send(:attr_writer, name)
+			end
+			::Rtype::define_typed_writer(singleton_class, name, type_behavior)
 		end
 		nil
 	end
